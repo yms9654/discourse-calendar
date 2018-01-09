@@ -13,7 +13,7 @@ PLUGIN_NAME ||= "discourse-calendar".freeze
 enabled_site_setting :calendar_enabled
 
 after_initialize do
-  load File.expand_path(File.dirname(__FILE__)) << "/models/post_schedule.rb"  
+  load File.expand_path(File.dirname(__FILE__)) << "/models/post_schedule.rb"
 
   module ::DiscourseCalendar
     def self.filters
@@ -24,7 +24,7 @@ after_initialize do
       engine_name PLUGIN_NAME
       isolate_namespace DiscourseCalendar
     end
- 
+
     class DiscourseCalendar::ScheduleValidator
       def initialize(post)
         @post = post
@@ -118,8 +118,8 @@ after_initialize do
 
   Post.class_eval do
     has_many :post_schedules, class_name: "PostSchedule", dependent: :delete_all
-  end 
-  
+  end
+
   DiscourseCalendar::Engine.routes.draw do
     get "/schedules" => "calendar#latest_schedules"
     get "/schedules/top" => "calendar#top_schedules"
@@ -154,7 +154,7 @@ after_initialize do
 
   class DiscourseCalendar::CalendarController < ListController
 
-    before_filter :set_category, only: [
+    before_action :set_category, only: [
       # filtered topics lists
       Discourse.filters.map { |f| :"category_#{f}_schedules" },
       Discourse.filters.map { |f| :"category_none_#{f}_schedules" },
@@ -170,7 +170,7 @@ after_initialize do
       TopTopic.periods.map { |p| :"parent_category_category_top_#{p}_schedules" },
     ].flatten
 
-    before_filter :ensure_logged_in, except: [
+    before_action :ensure_logged_in, except: [
       # anonymous filters
       Discourse.anonymous_filters.map { |f| :"#{f}_schedules" },
       # anonymous categorized filters
@@ -188,7 +188,7 @@ after_initialize do
       TopTopic.periods.map { |p| :"category_none_top_#{p}_schedules" },
       TopTopic.periods.map { |p| :"parent_category_category_top_#{p}_schedules" },
     ].flatten
-    
+
     TopTopic.periods.each do |period|
       define_method("top_#{period}_schedules") do |options = {limit: false}|
         score = "#{period}_score"
@@ -211,11 +211,11 @@ after_initialize do
       define_method("category_top_#{period}_schedules") do
         self.send("top_#{period}_schedules", category: @category.id, limit: false)
       end
-    
+
       define_method("category_none_top_#{period}_schedules") do
         self.send("top_#{period}_schedules", category: @category.id, no_subcategories: true, limit: false)
       end
-    
+
       define_method("parent_category_category_top_#{period}_schedules") do
         self.send("top_#{period}_schedules", category: @category.id, limit: false)
       end
@@ -259,16 +259,16 @@ after_initialize do
         canonical_url "#{Discourse.base_url_no_prefix}#{@category.url}"
         self.send("#{filter}_schedules", category: @category.id, limit: false)
       end
-   
+
       define_method("category_none_#{filter}_schedules") do
         self.send("#{filter}_schedules", category: @category.id, no_subcategories: true, limit: false)
       end
-   
+
       define_method("parent_category_category_#{filter}_schedules") do
         canonical_url "#{Discourse.base_url_no_prefix}#{@category.url}"
         self.send("#{filter}_schedules", category: @category.id, limit: false)
       end
-   
+
     end
 
     private
@@ -284,7 +284,7 @@ after_initialize do
         schedule[:topic_title] = t.title
         schedule[:topic_id] = t.id
         schedule[:color] = t.category.color ? "\##{t.category.color}" : "#{SiteSetting.calendar_schedule_default_color}"
-        
+
         t.posts.each do |p|
           schedule[:post_id] = p.id
           schedule[:post_url] = p.url
@@ -314,7 +314,7 @@ after_initialize do
 
   validate(:post, :validate_schedules) do
     return if !SiteSetting.calendar_enabled?
-    
+
     return unless self.raw_changed?
 
     validator = DiscourseCalendar::ScheduleValidator::new(self)
